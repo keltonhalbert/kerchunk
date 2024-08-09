@@ -88,6 +88,7 @@ class GRIBCodec(numcodecs.abc.Codec):
 
     def decode(self, buf, out=None):
         import eccodes
+        eccodes.codes_grib_multi_support_on()
 
         if self.var in ["latitude", "longitude"]:
             var = self.var + "s"
@@ -109,6 +110,7 @@ class GRIBCodec(numcodecs.abc.Codec):
 
             finally:
                 eccodes.codes_release(mid)
+        eccodes.codes_grib_multi_support_off()
 
 
 numcodecs.register_codec(GRIBCodec, "grib")

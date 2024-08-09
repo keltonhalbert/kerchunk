@@ -151,11 +151,19 @@ def scan_grib(
     # TIME_DIMS = ["step", "time", "valid_time"]
 
     out = []
+    eccodes.codes_grib_multi_support_on()
     with fsspec.open(url, "rb", **storage_options) as f:
         logger.debug(f"File {url}")
-        for offset, size, data in _split_file(f, skip=skip):
+
+        while True:
             store = {}
-            mid = eccodes.codes_new_from_message(data)
+            mid = eccodes.codes_new_from_file(f, eccodes.CODES_PRODUCT_GRIB)
+            ## Exit if there are no more messages inside the grib2 file
+            if mid is None:
+                break
+
+            offset = eccodes.codes_get_message_offset(mid)
+            size = eccodes.codes_get_message_size(mid)
             m = cfgrib.cfmessage.CfMessage(mid)
 
             # It would be nice to just have a list of valid keys
@@ -319,6 +327,7 @@ def scan_grib(
                     "templates": {"u": url},
                 }
             )
+    eccodes.codes_grib_multi_support_off()
     logger.debug("Done")
     return out
 
